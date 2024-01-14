@@ -6,14 +6,13 @@ struct Queue
     Vector* data;
     size_t head;
     size_t tail;
-    size_t freeSpace;
 };
 
 Queue *queue_create()
 {
     Queue* tmp = new Queue;
     tmp->data = vector_create();
-    tmp->head = tmp->tail = tmp->freeSpace = 0;
+    tmp->head = tmp->tail = 0;
     return tmp;
 }
 
@@ -26,11 +25,10 @@ void queue_delete(Queue *queue)
 
 void queue_insert(Queue *queue, Data data)
 {
-    if (!queue->freeSpace)
+    if (!vector_size(queue->data) || !((queue->tail - queue->head + vector_size(queue->data)) % vector_size(queue->data)))
     {
         Vector* newData = vector_create();
         vector_resize(newData, (vector_size(queue->data) + 1) * 2);
-        queue->freeSpace = vector_size(newData);
 
         size_t i, j = 0;
         if (vector_size(queue->data))
@@ -39,7 +37,6 @@ void queue_insert(Queue *queue, Data data)
             {
                 i %= vector_size(queue->data);
                 vector_set(newData, j++, vector_get(queue->data, i));
-                queue->freeSpace--;
             }
             vector_set(newData, j++, vector_get(queue->data, i));
         }
@@ -50,7 +47,6 @@ void queue_insert(Queue *queue, Data data)
     }
     queue->tail %= vector_size(queue->data);
     vector_set(queue->data, queue->tail++, data);
-    queue->freeSpace--;
 }
 
 Data queue_get(const Queue *queue)
@@ -61,7 +57,6 @@ Data queue_get(const Queue *queue)
 void queue_remove(Queue *queue)
 {
     queue->head++;
-    queue->freeSpace++;
 }
 
 bool queue_empty(const Queue *queue)
